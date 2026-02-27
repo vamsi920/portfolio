@@ -1,22 +1,42 @@
 import { about, site } from '@/data/content'
+import { useHandGestures } from '@/context/HandGestureContext'
+import { useAttentionFocused } from '@/context/AttentionModeContext'
+import { TechSphere } from './About/TechSphere'
 
 export function About() {
+  const { state: gesture } = useHandGestures()
+  const reducedMotion =
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const scale = reducedMotion || gesture.status !== 'active' ? 1 : gesture.profileScale
+  const attentionFocus = useAttentionFocused('section-about')
+
   return (
     <section
       id="section-about"
-      className="relative scroll-mt-20 py-20 md:py-28"
+      className={`relative scroll-mt-20 py-20 md:py-28 transition-[box-shadow] duration-300 ${attentionFocus ? 'ring-2 ring-inset ring-accent/40' : ''}`}
       aria-labelledby="about-heading"
     >
       <div className="container mx-auto max-w-6xl px-6">
         <div className="grid gap-12 md:grid-cols-2 md:gap-16 lg:gap-20">
-          <div className="order-2 md:order-1">
-            <img
-              src={site.aboutImage}
-              alt="Venkat Vamsi"
-              className="w-full rounded-2xl object-cover shadow-2xl ring-1 ring-white/10"
-              width={600}
-              height={400}
-            />
+          <div
+            className="order-2 md:order-1 flex justify-center transition-transform duration-150 ease-out"
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: 'center center',
+            }}
+          >
+            <div className="relative w-full max-w-md aspect-[4/3] flex items-center justify-center">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl">
+                <TechSphere className="!absolute inset-0 !w-full !h-full !max-w-none" />
+              </div>
+              <img
+                src={site.aboutImage}
+                alt="Venkat Vamsi"
+                className="relative z-10 w-2/3 max-w-[220px] aspect-square rounded-full object-cover ring-2 ring-white/20 shadow-xl"
+                width={220}
+                height={220}
+              />
+            </div>
           </div>
           <div className="order-1 flex flex-col justify-center md:order-2">
             <h2 id="about-heading" className="font-display text-3xl font-bold text-white md:text-4xl">

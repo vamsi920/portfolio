@@ -1,10 +1,12 @@
 import { contact } from '@/data/content'
+import { useAttentionFocused } from '@/context/AttentionModeContext'
 
 export function Contact() {
+  const attentionFocus = useAttentionFocused('section-contact')
   return (
     <section
       id="section-contact"
-      className="relative scroll-mt-20 py-20 md:py-28"
+      className={`relative scroll-mt-20 py-20 md:py-28 transition-[box-shadow] duration-300 ${attentionFocus ? 'ring-2 ring-inset ring-accent/40' : ''}`}
       aria-labelledby="contact-heading"
     >
       <div className="container mx-auto max-w-6xl px-6">

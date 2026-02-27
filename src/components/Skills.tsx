@@ -1,16 +1,18 @@
 import { skills } from '@/data/content'
 import { useViewer } from '@/context/ViewerContext'
+import { useAttentionFocused } from '@/context/AttentionModeContext'
 import { tiltTransform } from '@/utils/parallax'
 
 export function Skills() {
   const { state } = useViewer()
   const reducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const tilt = reducedMotion ? '' : tiltTransform(state.x * 0.5, state.y * 0.5, 4)
+  const attentionFocus = useAttentionFocused('section-services')
 
   return (
     <section
       id="section-services"
-      className="relative scroll-mt-20 py-20 md:py-28"
+      className={`relative scroll-mt-20 py-20 md:py-28 transition-[box-shadow] duration-300 ${attentionFocus ? 'ring-2 ring-inset ring-accent/40' : ''}`}
       aria-labelledby="skills-heading"
     >
       <div className="container mx-auto max-w-6xl px-6">

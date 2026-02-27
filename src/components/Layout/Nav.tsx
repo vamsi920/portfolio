@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSoundFeedback } from '@/context/SoundFeedbackContext'
 
 const links = [
   { href: '#section-home', label: 'Home' },
@@ -10,6 +11,7 @@ const links = [
 
 export function Nav() {
   const [open, setOpen] = useState(false)
+  const { playFeedback } = useSoundFeedback()
 
   return (
     <nav
@@ -19,7 +21,11 @@ export function Nav() {
     >
       <div className="glass-strong mx-4 mt-4 rounded-2xl md:mx-8">
         <div className="flex items-center justify-between px-4 py-3 md:px-6">
-          <a href="#section-home" className="font-display text-lg font-semibold text-white">
+          <a
+            href="#section-home"
+            className="font-display text-lg font-semibold text-white"
+            onClick={(e) => playFeedback('click', e.clientX / window.innerWidth)}
+          >
             VV
           </a>
           <button
@@ -47,7 +53,10 @@ export function Nav() {
                 <a
                   href={href}
                   className="block rounded-lg px-4 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white md:px-3"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => {
+                    playFeedback('click', e.clientX / window.innerWidth)
+                    setOpen(false)
+                  }}
                 >
                   {label}
                 </a>

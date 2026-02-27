@@ -50,3 +50,8 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgb(255 255 255 / 0.08);
 }
+
+/* Hologram resume panel */
+.hologram-panel {
+  isolation: isolate;
+}
