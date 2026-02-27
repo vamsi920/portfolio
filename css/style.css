@@ -624,38 +624,67 @@ a {
   letter-spacing: .2rem;
   color: rgba(255, 255, 255, 0.5) !important; }
 
-/* Enhanced scroll reveal animations */
+/* Premium scroll reveal: IntersectionObserver + CSS transitions */
 .scroll-reveal {
   opacity: 0;
-  transform: translate3d(0, 38px, 0) scale(0.985);
-  filter: blur(6px);
-  transition: opacity 650ms cubic-bezier(0.22, 1, 0.36, 1),
-              transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
-              filter 700ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform, filter;
+  transform: translate3d(0, 32px, 0);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  contain: layout style;
+}
+
+.scroll-reveal.reveal-up {
+  transform: translate3d(0, 32px, 0);
 }
 
 .scroll-reveal.reveal-left {
-  transform: translate3d(-34px, 24px, 0) scale(0.985);
+  transform: translate3d(-28px, 16px, 0);
 }
 
 .scroll-reveal.reveal-right {
-  transform: translate3d(34px, 24px, 0) scale(0.985);
+  transform: translate3d(28px, 16px, 0);
 }
 
-.scroll-reveal.is-visible {
+.scroll-reveal.is-visible,
+.scroll-reveal.reveal-up.is-visible,
+.scroll-reveal.reveal-left.is-visible,
+.scroll-reveal.reveal-right.is-visible {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
-  filter: blur(0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Stagger via transition-delay (set by JS) */
+.scroll-reveal[data-reveal-delay] {
+  transition-delay: calc(var(--reveal-delay, 0) * 1ms);
+}
+
+/* Desktop: subtle blur for premium feel (GPU-friendly, disabled on mobile for performance) */
+@media (min-width: 768px) {
+  .scroll-reveal {
+    filter: blur(4px);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+                filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .scroll-reveal.is-visible,
+  .scroll-reveal.reveal-up.is-visible,
+  .scroll-reveal.reveal-left.is-visible,
+  .scroll-reveal.reveal-right.is-visible {
+    filter: blur(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal,
+  .scroll-reveal.reveal-up,
   .scroll-reveal.reveal-left,
   .scroll-reveal.reveal-right {
     opacity: 1;
     filter: none;
     transform: none;
     transition: none;
+  }
+  .scroll-reveal[data-reveal-delay] {
+    transition-delay: 0ms;
   }
 }

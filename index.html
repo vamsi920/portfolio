@@ -286,14 +286,14 @@
 
 	'use strict';
 
-//grab a form
-const form = document.querySelector('#form-inline');
+//grab a form (id in markup may have trailing space)
+const form = document.querySelector('#form-inline') || document.querySelector('#form-inline ');
 
-//grab an input
-const inputEmail = form.querySelector('#inputEmail');
-const inputName = form.querySelector('#inputName');
-const inputNumber = form.querySelector('#inputNumber');
-const inputName = form.querySelector('#inputName');
+//grab inputs only if form exists (avoids console errors when form missing)
+const inputEmail = form && form.querySelector('#inputEmail');
+const inputName = form && form.querySelector('#inputName');
+const inputNumber = form && form.querySelector('#inputNumber');
+const inputMessage = form && form.querySelector('#inputMessage');
 
 
 //config your firebase push
@@ -332,13 +332,12 @@ const config = {
     }
 
 //push on form submit
-    if (form) {
+    if (form && inputEmail && inputName && inputNumber && inputMessage) {
         form.addEventListener('submit', function (evt) {
-        	console.log("function called")
             evt.preventDefault();
             firebasePush(inputEmail, inputName, inputNumber, inputMessage);
             return alert('Data Successfully Sent to Realtime Database');
-        })
+        });
     }
 </script>
 

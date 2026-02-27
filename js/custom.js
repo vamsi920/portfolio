@@ -321,20 +321,42 @@
 	var enhancedScrollAnimations = function() {
 		var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		if (prefersReducedMotion) {
+			document.querySelectorAll('.scroll-reveal').forEach(function(el) {
+				el.classList.add('is-visible');
+			});
 			return;
 		}
 
-		var targets = document.querySelectorAll('.section-heading, .resume-item, .site-service-item, .site-contact-details li, .social-item, .lead, .site-hero .site-heading, .myInfo');
-		if (!targets.length) {
-			return;
-		}
+		var STAGGER_MS = 55;
+		var configs = [
+			{ selector: '.section-heading', direction: 'reveal-up', stagger: false },
+			{ selector: '#section-about .lead', direction: 'reveal-up', stagger: false },
+			{ selector: '#section-about .btn', direction: 'reveal-up', stagger: false },
+			{ selector: '#section-resume h2.mb-5', direction: 'reveal-up', stagger: false },
+			{ selector: '.resume-item', direction: 'reveal-up', stagger: true },
+			{ selector: '.site-service-item', direction: 'reveal-up', stagger: true, alternate: ['reveal-up', 'reveal-left', 'reveal-right'] },
+			{ selector: '#section-contact .section-heading', direction: 'reveal-up', stagger: false },
+			{ selector: '#section-contact h3.mb-5', direction: 'reveal-up', stagger: false },
+			{ selector: '.site-contact-details li', direction: 'reveal-left', stagger: true },
+			{ selector: '.site-footer .social-item', direction: 'reveal-up', stagger: true }
+		];
 
-		var variants = ['reveal-up', 'reveal-left', 'reveal-right'];
-		targets.forEach(function(el, index) {
-			el.classList.add('scroll-reveal');
-			el.classList.add(variants[index % variants.length]);
-			el.style.transitionDelay = (Math.min(index % 6, 5) * 60) + 'ms';
+		var targets = [];
+		configs.forEach(function(cfg) {
+			var els = document.querySelectorAll(cfg.selector);
+			els.forEach(function(el, i) {
+				el.classList.add('scroll-reveal');
+				var dir = cfg.alternate ? cfg.alternate[i % cfg.alternate.length] : cfg.direction;
+				el.classList.add(dir);
+				if (cfg.stagger) {
+					el.style.setProperty('--reveal-delay', String(i * STAGGER_MS));
+					el.setAttribute('data-reveal-delay', '');
+				}
+				targets.push(el);
+			});
 		});
+
+		if (!targets.length) return;
 
 		var observer = new IntersectionObserver(function(entries) {
 			entries.forEach(function(entry) {
@@ -344,8 +366,8 @@
 				}
 			});
 		}, {
-			threshold: 0.18,
-			rootMargin: '0px 0px -8% 0px'
+			threshold: 0.12,
+			rootMargin: '0px 0px -6% 0px'
 		});
 
 		targets.forEach(function(el) {
