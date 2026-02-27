@@ -318,6 +318,41 @@
 	};
 
 
+	var enhancedScrollAnimations = function() {
+		var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (prefersReducedMotion) {
+			return;
+		}
+
+		var targets = document.querySelectorAll('.section-heading, .resume-item, .site-service-item, .site-contact-details li, .social-item, .lead, .site-hero .site-heading, .myInfo');
+		if (!targets.length) {
+			return;
+		}
+
+		var variants = ['reveal-up', 'reveal-left', 'reveal-right'];
+		targets.forEach(function(el, index) {
+			el.classList.add('scroll-reveal');
+			el.classList.add(variants[index % variants.length]);
+			el.style.transitionDelay = (Math.min(index % 6, 5) * 60) + 'ms';
+		});
+
+		var observer = new IntersectionObserver(function(entries) {
+			entries.forEach(function(entry) {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('is-visible');
+					observer.unobserve(entry.target);
+				}
+			});
+		}, {
+			threshold: 0.18,
+			rootMargin: '0px 0px -8% 0px'
+		});
+
+		targets.forEach(function(el) {
+			observer.observe(el);
+		});
+	};
+
 	$(function(){
 
 		OnePageNav();
@@ -327,6 +362,7 @@
 		clickMenu();
 		smoothScroll();
 		portfolioMasonry();
+		enhancedScrollAnimations();
 	});
 
 	
