@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS custom properties for theming and reduced-motion */
+:root {
+  --surface: 18 18 24;
+  --surface-muted: 30 30 42;
+  --accent: 132 144 255;
+  --accent-dim: 98 189 252;
+  --text: 248 250 252;
+  --text-muted: 148 163 184;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  @apply font-body antialiased;
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+}
+
+/* Glass panel base */
+.glass {
+  background: rgb(var(--surface-muted) / 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.glass-strong {
+  background: rgb(var(--surface-muted) / 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgb(255 255 255 / 0.08);
+}
