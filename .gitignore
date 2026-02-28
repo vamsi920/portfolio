@@ -5,6 +5,9 @@ node_modules/
 dist/
 *.local
 
+# MediaPipe WASM (copied from node_modules by postinstall)
+public/mediapipe-wasm/
+
 # IDE
 .vscode/
 .idea/
@@ -24,3 +27,4 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+.vercel

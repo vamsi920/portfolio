@@ -97,8 +97,9 @@ export function FaceDepthProvider({ children }: FaceDepthProviderProps) {
     try {
       const vision = await import('@mediapipe/tasks-vision')
       const { FilesetResolver, FaceDetector } = vision
-      const wasm = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-      const visionResolver = await FilesetResolver.forVisionTasks(wasm)
+      const base = typeof window !== 'undefined' ? window.location.origin : ''
+      const wasmBase = `${base}/mediapipe-wasm`
+      const visionResolver = await FilesetResolver.forVisionTasks(wasmBase)
       const modelPath =
         'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite'
       const detector = await FaceDetector.createFromOptions(visionResolver, {
@@ -113,19 +114,47 @@ export function FaceDepthProvider({ children }: FaceDepthProviderProps) {
       streamRef.current = stream
       const video = document.createElement('video')
       video.setAttribute('playsinline', '')
+      video.setAttribute('muted', '')
+      video.autoplay = true
       video.srcObject = stream
       videoRef.current = video
       await video.play()
 
-      const detect = async () => {
+      await new Promise<void>((resolve, reject) => {
+        if (video.readyState >= 2 && video.videoWidth > 0) {
+          resolve()
+          return
+        }
+        const onReady = () => {
+          video.removeEventListener('loadeddata', onReady)
+          video.removeEventListener('error', onError)
+          if (video.videoWidth > 0) resolve()
+          else reject(new Error('Video has no dimensions'))
+        }
+        const onError = () => {
+          video.removeEventListener('loadeddata', onReady)
+          video.removeEventListener('error', onError)
+          reject(new Error('Video failed to load'))
+        }
+        video.addEventListener('loadeddata', onReady)
+        video.addEventListener('error', onError)
+        setTimeout(() => {
+          video.removeEventListener('loadeddata', onReady)
+          video.removeEventListener('error', onError)
+          if (video.readyState >= 2 && video.videoWidth > 0) resolve()
+          else reject(new Error('Video timeout'))
+        }, 3000)
+      })
+
+      const detect = () => {
         const v = videoRef.current
         const det = detectorRef.current
-        if (!v || !det || !streamRef.current || v.readyState < 2) {
+        if (!v || !det || !streamRef.current || v.readyState < 2 || v.videoWidth === 0) {
           rafRef.current = requestAnimationFrame(detect)
           return
         }
-        const now = performance.now()
-        const result = det.detectForVideo(v, now)
+        const nowMs = performance.now()
+        const result = det.detectForVideo(v, nowMs)
         rafRef.current = requestAnimationFrame(detect)
 
         const detections = result.detections
@@ -134,7 +163,7 @@ export function FaceDepthProvider({ children }: FaceDepthProviderProps) {
         }
         const first = detections[0]
         const box = first.boundingBox
-        if (!box?.width || !box?.height) return
+        if (box == null || typeof box.width !== 'number' || typeof box.height !== 'number') return
 
         const area = box.width * box.height
         const frameArea = (v.videoWidth || 1) * (v.videoHeight || 1)
@@ -154,7 +183,8 @@ export function FaceDepthProvider({ children }: FaceDepthProviderProps) {
 
       rafRef.current = requestAnimationFrame(detect)
       setState((s) => ({ ...s, status: 'active' }))
-    } catch {
+    } catch (err) {
+      console.warn('Face depth init failed:', err)
       setState((s) => ({ ...s, status: 'unavailable' }))
     }
   }, [])

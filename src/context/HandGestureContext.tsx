@@ -102,8 +102,10 @@ export function HandGestureProvider({ children }: HandGestureProviderProps) {
     try {
       const vision = await import('@mediapipe/tasks-vision')
       const { FilesetResolver, HandLandmarker } = vision
-      const wasm = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-      const visionResolver = await FilesetResolver.forVisionTasks(wasm)
+      // Use same-origin WASM from public/mediapipe-wasm to avoid CORS
+      const base = typeof window !== 'undefined' ? window.location.origin : ''
+      const wasmBase = `${base}/mediapipe-wasm`
+      const visionResolver = await FilesetResolver.forVisionTasks(wasmBase)
       const modelPath =
         'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'
       const landmarker = await HandLandmarker.createFromOptions(visionResolver, {
@@ -119,22 +121,50 @@ export function HandGestureProvider({ children }: HandGestureProviderProps) {
       streamRef.current = stream
       const video = document.createElement('video')
       video.setAttribute('playsinline', '')
+      video.setAttribute('muted', '')
+      video.autoplay = true
       video.srcObject = stream
       videoRef.current = video
       await video.play()
 
+      await new Promise<void>((resolve, reject) => {
+        if (video.readyState >= 2 && video.videoWidth > 0) {
+          resolve()
+          return
+        }
+        const onReady = () => {
+          video.removeEventListener('loadeddata', onReady)
+          video.removeEventListener('error', onError)
+          if (video.videoWidth > 0) resolve()
+          else reject(new Error('Video has no dimensions'))
+        }
+        const onError = () => {
+          video.removeEventListener('loadeddata', onReady)
+          video.removeEventListener('error', onError)
+          reject(new Error('Video failed to load'))
+        }
+        video.addEventListener('loadeddata', onReady)
+        video.addEventListener('error', onError)
+        setTimeout(() => {
+          video.removeEventListener('loadeddata', onReady)
+          video.removeEventListener('error', onError)
+          if (video.readyState >= 2 && video.videoWidth > 0) resolve()
+          else reject(new Error('Video timeout'))
+        }, 3000)
+      })
+
       let lastPalmX = 0.5
       let currentScale = DEFAULT_SCALE
 
-      const detect = async () => {
+      const detect = () => {
         const v = videoRef.current
         const lm = landmarkerRef.current
-        if (!v || !lm || !streamRef.current || v.readyState < 2) {
+        if (!v || !lm || !streamRef.current || v.readyState < 2 || v.videoWidth === 0) {
           rafRef.current = requestAnimationFrame(detect)
           return
         }
-        const now = performance.now()
-        const result = lm.detectForVideo(v, now)
+        const nowMs = performance.now()
+        const result = lm.detectForVideo(v, nowMs)
         rafRef.current = requestAnimationFrame(detect)
 
         if (!result.landmarks?.length) {
@@ -180,9 +210,9 @@ export function HandGestureProvider({ children }: HandGestureProviderProps) {
         const distFromWrist = tips.map((t) => dist(t, wrist))
         const allExtended = distFromWrist.every((d) => d > 0.14)
         if (allExtended) {
-          const t = openPalmSinceRef.current ?? now
+          const t = openPalmSinceRef.current ?? nowMs
           openPalmSinceRef.current = t
-          if (now - t > OPEN_PALM_HOLD_MS) {
+          if (nowMs - t > OPEN_PALM_HOLD_MS) {
             resetView()
             currentScale = DEFAULT_SCALE
             openPalmSinceRef.current = null
@@ -194,7 +224,8 @@ export function HandGestureProvider({ children }: HandGestureProviderProps) {
 
       rafRef.current = requestAnimationFrame(detect)
       setState((s) => ({ ...s, status: 'active' }))
-    } catch {
+    } catch (err) {
+      console.warn('Hand gesture init failed:', err)
       setState((s) => ({ ...s, status: 'unavailable' }))
     }
   }, [resetView])
